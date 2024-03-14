@@ -1,4 +1,4 @@
-# ICP-lms
+# ICP-library management system (lms)
 This is a library management system canister implemented in TypeScript using the Azle framework. It provides functionality for users to manage library operations such as book search, issuance, and return, as well as admin functionalities for managing the library inventory.
 
 ## Features
