@@ -23,7 +23,7 @@ This is a library management system canister implemented in TypeScript using the
 
 1. Clone the repository.
 2. Install dependencies with ```npm install```.
-3.Install dfx
-```DFX_VERSION=0.15.0 sh -ci "$(curl -fsSL https://sdk.dfinity.org/install.sh)```
-```dfx start --background```
+3. Install dfx
+4. ```DFX_VERSION=0.15.0 sh -ci "$(curl -fsSL https://sdk.dfinity.org/install.sh)```
+5. ```dfx start --background```
 
