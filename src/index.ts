@@ -1,7 +1,9 @@
-// cannister code goes here
+   // cannister code goes here
 import { v4 as uuidv4 } from 'uuid';
 import { Server, StableBTreeMap, ic } from 'azle';
 import express from 'express';
+import { v4 as uuidv4 } from 'uuid';
+import { Server, StableBTreeMap } from 'azle';
 
 // Define types for User, Book, and Admin
 interface User {
@@ -10,7 +12,6 @@ interface User {
    email: string;
    password: string;
 }
-
 interface Book {
    id: string;
    title: string;
@@ -21,7 +22,6 @@ interface Book {
    issuedTo: string | null;
    dueDate: Date | null;
 }
-
 interface Admin {
    username: string;
    password: string;
@@ -31,20 +31,25 @@ interface Admin {
 const usersStorage = StableBTreeMap<string, User>(0);
 const booksStorage = StableBTreeMap<string, Book>(1); // Using memory ID 1 for books
 const adminsStorage = StableBTreeMap<string, Admin>(2); // Using memory ID 2 for admins
+const booksStorage = StableBTreeMap<string, Book>(1);
+const adminsStorage = StableBTreeMap<string, Admin>(2);
 
 // Implement user signup and login endpoints
+// Initialize Express app
 const app = express();
 app.use(express.json());
 
 // User signup
 app.post("/signup", (req, res) => {
    const { name, email, password } = req.body;
+   if (!name || !email || !password) {
+      return res.status(400).send("Name, email, and password are required");
+   }
    const id = uuidv4();
    const newUser: User = { id, name, email, password };
    usersStorage.insert(id, newUser);
    res.json(newUser);
 });
-
 // User login
 app.post("/login", (req, res) => {
    const { email, password } = req.body;
@@ -61,7 +66,6 @@ app.post("/login", (req, res) => {
 app.get("/books", (req, res) => {
    res.json(booksStorage.values());
 });
-
 // Book issuance
 app.post("/issue", (req, res) => {
    const { userId, bookId } = req.body;
@@ -78,7 +82,18 @@ app.post("/issue", (req, res) => {
       book.dueDate = dueDate;
       booksStorage.insert(bookId, book);
       res.json(book);
+      return res.status(404).send("Book not found");
    }
+   if (book.issued) {
+      return res.status(400).send("Book already issued");
+   }
+   const dueDate = new Date();
+   dueDate.setDate(dueDate.getDate() + 14);
+   book.issued = true;
+   book.issuedTo = userId;
+   book.dueDate = dueDate;
+   booksStorage.insert(bookId, book);
+   res.json(book);
 });
 
 // Implement admin login and admin functionalities
@@ -92,7 +107,6 @@ app.post("/admin/login", (req, res) => {
       res.status(401).send("Invalid admin credentials");
    }
 });
-
 // Admin add book
 app.post("/admin/add-book", (req, res) => {
    const { title, author, category, price } = req.body;
@@ -101,20 +115,17 @@ app.post("/admin/add-book", (req, res) => {
    booksStorage.insert(id, newBook);
    res.json(newBook);
 });
-
 // Admin view issued books
 app.get("/admin/issued-books", (req, res) => {
    const issuedBooks = Object.values(booksStorage.values()).filter(book => book.issued);
    res.json(issuedBooks);
 });
-
 // Admin view overdue books
 app.get("/admin/overdue-books", (req, res) => {
    const today = new Date();
    const overdueBooks = Object.values(booksStorage.values()).filter(book => book.issued && book.dueDate && book.dueDate < today);
    res.json(overdueBooks);
 });
-
 // Run the server
 export default Server(() => {
    return app.listen();
